@@ -7,17 +7,30 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 15px; }
-        .container { background: #1e293b; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); width: 100%; max-width: 600px; text-align: center; }
+        .container { background: #1e293b; padding: 1.5rem 2rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); width: 100%; max-width: 650px; text-align: center; }
         h1 { margin-bottom: 0.5rem; color: #38bdf8; font-size: 1.8rem; }
         
-        .stats-bar { display: flex; justify-content: space-between; background: #0f172a; padding: 12px 18px; border-radius: 10px; margin: 1rem 0; font-weight: bold; font-size: 0.95rem; border: 1px solid #334155; }
-        .my-stat { color: #4ade80; }
-        .opp-stat { color: #f87171; }
+        /* Skor ve Darağacı Alanı */
+        .gallows-arena { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 1rem 0; }
+        .player-box { background: #0f172a; padding: 12px; border-radius: 12px; border: 2px solid #334155; display: flex; flex-direction: column; align-items: center; }
+        .player-box.my-box { border-color: #166534; }
+        .player-box.opp-box { border-color: #7f1d1d; }
+        
+        .player-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 8px; }
+        .my-title { color: #4ade80; }
+        .opp-title { color: #f87171; }
 
-        #status-message { font-size: 1.1rem; margin: 1rem 0; padding: 10px; border-radius: 8px; background: #334155; color: #f8fafc; font-weight: 600; }
-        .category-badge { display: inline-block; background: #0284c7; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 1rem; margin-top: 5px; }
+        /* SVG Adam Asmaca Çizimi */
+        .hangman-svg { width: 120px; height: 140px; stroke: #cbd5e1; stroke-width: 4; stroke-linecap: round; fill: none; }
+        .gallows-line { stroke: #64748b; stroke-width: 5; }
+        .body-part { stroke: #facc15; stroke-width: 4; display: none; }
+        .opp-box .body-part { stroke: #f87171; }
+        .dead-eyes { stroke: #ef4444; stroke-width: 2.5; display: none; }
 
-        .word-display { font-size: 2rem; letter-spacing: 6px; margin: 1.8rem 0; font-weight: bold; color: #facc15; min-height: 50px; line-height: 1.4; word-wrap: break-word; }
+        #status-message { font-size: 1.05rem; margin: 0.8rem 0; padding: 10px; border-radius: 8px; background: #334155; color: #f8fafc; font-weight: 600; }
+        .category-badge { display: inline-block; background: #0284c7; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.95rem; margin-top: 4px; }
+
+        .word-display { font-size: 1.9rem; letter-spacing: 6px; margin: 1.2rem 0; font-weight: bold; color: #facc15; min-height: 45px; line-height: 1.4; word-wrap: break-word; }
 
         #menu-section, #custom-input-section, #game-area, #gameover-section { display: none; }
         .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 1rem; }
@@ -30,14 +43,14 @@
         .input-group { display: flex; flex-direction: column; gap: 10px; margin-top: 1rem; }
         input[type="text"], input[type="password"] { padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 1rem; text-align: center; }
 
-        .keyboard { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 1rem; }
-        .key-btn { padding: 12px 0; background: #334155; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.1s; }
+        .keyboard { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 0.8rem; }
+        .key-btn { padding: 10px 0; background: #334155; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.1s; }
         .key-btn:hover:not(:disabled) { background: #475569; transform: translateY(-2px); }
         .key-btn.correct { background: #22c55e !important; color: white; cursor: not-allowed; }
         .key-btn.wrong { background: #ef4444 !important; color: white; cursor: not-allowed; }
         .key-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .direct-guess-box { display: flex; gap: 8px; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #334155; }
+        .direct-guess-box { display: flex; gap: 8px; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid #334155; }
         .direct-guess-box input { flex: 1; }
         .btn-guess { background: #eab308; color: #0f172a; padding: 0 20px; }
         .btn-guess:hover:not(:disabled) { background: #facc15; }
@@ -73,11 +86,56 @@
             </div>
         </div>
 
-        <!-- 3. ORTAK OYUN TAHTASI -->
+        <!-- 3. ORTAK OYUN TAHTASI VE DARAĞAÇLARI -->
         <div id="game-area">
-            <div class="stats-bar">
-                <div class="my-stat">SEN: ❤️ <span id="myLives">6</span> | 🏆 Skor: <span id="myScore">0</span></div>
-                <div class="opp-stat">RAKİP: ❤️ <span id="oppLives">6</span> | 🏆 Skor: <span id="oppScore">0</span></div>
+            <div class="gallows-arena">
+                <!-- SENİN DARAĞACIN -->
+                <div class="player-box my-box">
+                    <div class="player-title my-title">SEN (🏆 Skor: <span id="myScore">0</span>)</div>
+                    <svg class="hangman-svg" viewBox="0 0 120 140">
+                        <!-- Darağacı -->
+                        <line class="gallows-line" x1="10" y1="130" x2="90" y2="130" />
+                        <line class="gallows-line" x1="30" y1="130" x2="30" y2="10" />
+                        <line class="gallows-line" x1="30" y1="10" x2="80" y2="10" />
+                        <line class="gallows-line" x1="80" y1="10" x2="80" y2="25" />
+                        <!-- Adamın Parçaları (6 Adım) -->
+                        <circle class="body-part my-part" cx="80" cy="38" r="13" /> <!-- 1: Kafa -->
+                        <line class="body-part my-part" x1="80" y1="51" x2="80" y2="90" /> <!-- 2: Gövde -->
+                        <line class="body-part my-part" x1="80" y1="60" x2="60" y2="78" /> <!-- 3: Sol Kol -->
+                        <line class="body-part my-part" x1="80" y1="60" x2="100" y2="78" /> <!-- 4: Sağ Kol -->
+                        <line class="body-part my-part" x1="80" y1="90" x2="63" y2="115" /> <!-- 5: Sol Bacak -->
+                        <line class="body-part my-part" x1="80" y1="90" x2="97" y2="115" /> <!-- 6: Sağ Bacak -->
+                        <!-- Ölü Gözler (Can 0 olunca çıkar) -->
+                        <g class="dead-eyes" id="my-dead-eyes">
+                            <line x1="74" y1="34" x2="78" y2="38" /><line x1="78" y1="34" x2="74" y2="38" />
+                            <line x1="82" y1="34" x2="86" y2="38" /><line x1="86" y1="34" x2="82" y2="38" />
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- RAKİBİN DARAĞACI -->
+                <div class="player-box opp-box">
+                    <div class="player-title opp-title">RAKİP (🏆 Skor: <span id="oppScore">0</span>)</div>
+                    <svg class="hangman-svg" viewBox="0 0 120 140">
+                        <!-- Darağacı -->
+                        <line class="gallows-line" x1="10" y1="130" x2="90" y2="130" />
+                        <line class="gallows-line" x1="30" y1="130" x2="30" y2="10" />
+                        <line class="gallows-line" x1="30" y1="10" x2="80" y2="10" />
+                        <line class="gallows-line" x1="80" y1="10" x2="80" y2="25" />
+                        <!-- Adamın Parçaları (6 Adım) -->
+                        <circle class="body-part opp-part" cx="80" cy="38" r="13" />
+                        <line class="body-part opp-part" x1="80" y1="51" x2="80" y2="90" />
+                        <line class="body-part opp-part" x1="80" y1="60" x2="60" y2="78" />
+                        <line class="body-part opp-part" x1="80" y1="60" x2="100" y2="78" />
+                        <line class="body-part opp-part" x1="80" y1="90" x2="63" y2="115" />
+                        <line class="body-part opp-part" x1="80" y1="90" x2="97" y2="115" />
+                        <!-- Ölü Gözler -->
+                        <g class="dead-eyes" id="opp-dead-eyes">
+                            <line x1="74" y1="34" x2="78" y2="38" /><line x1="78" y1="34" x2="74" y2="38" />
+                            <line x1="82" y1="34" x2="86" y2="38" /><line x1="86" y1="34" x2="82" y2="38" />
+                        </g>
+                    </svg>
+                </div>
             </div>
 
             <div>Kategori: <span class="category-badge" id="categoryDisplay">-</span></div>
@@ -113,15 +171,12 @@
 
         const categoryDisplay = document.getElementById('categoryDisplay');
         const wordDisplay = document.getElementById('wordDisplay');
-        const myLives = document.getElementById('myLives');
-        const oppLives = document.getElementById('oppLives');
         const myScore = document.getElementById('myScore');
         const oppScore = document.getElementById('oppScore');
         const keyboard = document.getElementById('keyboard');
         const fullWordInput = document.getElementById('fullWordInput');
         const fullWordBtn = document.getElementById('fullWordBtn');
 
-        // Giyim markaları için W, Q, X dahil edildi
         const alphabet = "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZQWX";
         let isMyTurn = false;
 
@@ -141,6 +196,16 @@
             });
         }
         createKeyboard();
+
+        // Kalan cana göre adamın uzuvlarını çizen fonksiyon
+        function drawHangman(partsClass, eyesId, remainingLives) {
+            const mistakes = 6 - remainingLives; // Yapılan hata sayısı (0 ile 6 arası)
+            const parts = document.querySelectorAll(`.${partsClass}`);
+            parts.forEach((part, index) => {
+                part.style.display = index < mistakes ? 'block' : 'none';
+            });
+            document.getElementById(eyesId).style.display = remainingLives <= 0 ? 'block' : 'none';
+        }
 
         function hideAllSections() {
             menuSection.style.display = 'none';
@@ -197,10 +262,12 @@
             categoryDisplay.textContent = data.category;
             wordDisplay.innerHTML = data.maskedWord.map(ch => ch === ' ' ? '&nbsp;&nbsp;' : ch).join(' ');
 
-            myLives.textContent = data.myLives;
-            oppLives.textContent = data.opponentLives;
             myScore.textContent = data.myScore;
             oppScore.textContent = data.opponentScore;
+
+            // Adam Asmaca Çizimlerini Güncelle
+            drawHangman('my-part', 'my-dead-eyes', data.myLives);
+            drawHangman('opp-part', 'opp-dead-eyes', data.opponentLives);
 
             fullWordInput.disabled = !isMyTurn;
             fullWordBtn.disabled = !isMyTurn;
@@ -234,6 +301,13 @@
             document.getElementById('revealedWord').textContent = data.secretWord;
             myScore.textContent = data.myScore;
             oppScore.textContent = data.opponentScore;
+
+            // Eğer can biterek oyun bittiyse son parçayı da çizdirmek için kontrol
+            if (data.message.includes("Tüm canların bitti") || data.message.includes("Son canın da gitti")) {
+                drawHangman('my-part', 'my-dead-eyes', 0);
+            } else if (data.message.includes("Rakibinin tüm canları bitti") || data.message.includes("Rakibin yanlış kelime")) {
+                drawHangman('opp-part', 'opp-dead-eyes', 0);
+            }
 
             gameoverSection.style.display = 'block';
             fullWordInput.disabled = true;
